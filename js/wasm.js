@@ -46,6 +46,6 @@ export const setKeys = (key, down, handle = 0) => {
   return wasm.instance.exports.setKeys(keyIndex, down, handle);
 };
 
-/** @type {(game: number, keys: number) => number} */
+/** @type {(game: number, keys: number, width: number, height: number) => number} */
 //@ts-ignore
 export const update = wasm.instance.exports.update;

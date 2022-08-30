@@ -46,15 +46,19 @@ export fn setKeys(key: u32, down: u32, handle: ?*Keys) ?*Keys {
 
 const Game = struct {
     player: struct {
-        x: u32,
-        y: u32,
+        x: i32,
+        y: i32,
     },
 };
 
-export fn update(game: ?*Game, keys: *Keys) ?*Game {
+export fn update(game: ?*Game, keys: *Keys, width: u32, height: u32) ?*Game {
     if (game) |g| {
-        g.player.y += @as(u32, @boolToInt(keys.Down)) - @as(u32, @boolToInt(keys.Up));
-        g.player.x += @as(u32, @boolToInt(keys.Right)) - @as(u32, @boolToInt(keys.Left));
+        g.player.y += (@as(i32, @boolToInt(keys.Down)) - @as(i32, @boolToInt(keys.Up))) * 5;
+        g.player.x += (@as(i32, @boolToInt(keys.Right)) - @as(i32, @boolToInt(keys.Left))) * 5;
+        if (g.player.x < 0) g.player.x = 0;
+        if (g.player.y < 0) g.player.y = 0;
+        if (g.player.x > width - 10) g.player.x = @intCast(i32, width) - 10;
+        if (g.player.y > height - 10) g.player.y = @intCast(i32, height) - 10;
         return g;
     } else {
         const result = allocator.create(Game) catch {
@@ -67,20 +71,41 @@ export fn update(game: ?*Game, keys: *Keys) ?*Game {
     }
 }
 
+var prng = std.rand.DefaultPrng.init(1337);
+var random = prng.random();
+
+const masks = [13]u32{
+    0xFFFFFFCC,
+    0xFFFFFFBB,
+    0xFFFFFF88,
+    0xFFFFFFEE,
+    0xFFFFFF99,
+    0xFFFFFF66,
+    0xFFFFFF77,
+    0xFFFFFF55,
+    0xFFFFFFDD,
+    0xFFFFFF44,
+    0xFFFFFFAA,
+    0xFFFFFF22,
+    0xFFFFFF00,
+};
+
 export fn render(game: *Game, mem: [*]u32, width: u32, height: u32) void {
     var y: u32 = 0;
     while (y < height) : (y += 1) {
         var x: u32 = 0;
         while (x < width) : (x += 1) {
-            mem[y * width + x] = 0xFF0000FF;
+            mem[y * width + x] = 0xFF0000FF & masks[(y * 3 + x) % masks.len];
         }
     }
     var pY: u32 = 0;
     while (pY < 10) : (pY += 1) {
         var pX: u32 = 0;
         while (pX < 10) : (pX += 1) {
-            print(&[_:0]u8{@intCast(u8, game.player.y) + '0'});
-            mem[(game.player.y + pY) * width + (game.player.x + pX)] = 0x0000FFFF;
+            mem[
+                (@intCast(u32, game.player.y) + pY) * width +
+                    (@intCast(u32, game.player.x) + pX)
+            ] = 0x0000FFFF;
         }
     }
 }

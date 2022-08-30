@@ -10,7 +10,7 @@ document.body.style.overflow = "hidden";
 import { mem, render, resizeScreen, setKeys, update } from "./wasm.js";
 
 let keys = setKeys("Up", false, 0);
-let game = update(0, 0);
+let game = update(0, 0, canvas.width, canvas.height);
 
 addEventListener("keydown", (e) => {
   if (e.key === "ArrowUp" || e.key === "W") keys = setKeys("Up", true, keys);
@@ -71,7 +71,7 @@ const loop = () => {
   const w = canvas.width;
   const h = canvas.height;
 
-  game = update(game, keys);
+  game = update(game, keys, w, h);
   render(game, screen, w, h);
 
   ctx.putImageData(img, x, y);
